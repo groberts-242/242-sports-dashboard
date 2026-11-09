@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bahamas National Sports Platform MVP</title>
+  <!-- Chart.js & FontAwesome -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --navy: #1B365D;
+      --teal: #00A3E0;
+      --gold: #FFC72C;
+      --dark: #1E293B;
+      --light: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --border: #E2E8F0;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--light); color: var(--dark); min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Top Header */
+    header {
+      background: linear-gradient(135deg, var(--navy) 0%, #0d223f 100%);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      border-bottom: 4px solid var(--teal);
+    }
+    .brand { display: flex; align-items: center; gap: 1rem; }
+    .brand h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.5px; }
+    .brand p { font-size: 0.8rem; color: #94A3B8; }
+    .badge-mvp { background: var(--gold); color: #000; font-weight: 700; font-size: 0.7rem; padding: 0.25rem 0.5rem; border-radius: 999px; text-transform: uppercase; }
+
+    /* Nav Tabs */
+    nav {
+      background: white;
+      display: flex;
+      gap: 1rem;
+      padding: 0 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-btn {
+      padding: 1rem 1.25rem;
+      border: none;
+      background: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #64748B;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { color: var(--navy); }
+    .nav-btn.active {
+      color: var(--teal);
+      border-bottom-color: var(--teal);
+    }
+
+    /* Main Container */
+    main { flex: 1; padding: 1.5rem 2rem; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .filter-group { display: flex; align-items: center; gap: 0.5rem; }
+    .filter-group label { font-size: 0.8rem; font-weight: 600; color: #475569; text-transform: uppercase; }
+    select {
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      background: white;
+      outline: none;
+      min-width: 180px;
+    }
+    select:focus { border-color: var(--teal); }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+      background: white;
+      padding: 1.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .kpi-title { font-size: 0.75rem; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--navy); }
+    .kpi-sub { font-size: 0.75rem; color: #10B981; margin-top: 0.25rem; font-weight: 600; }
+
+    /* Grid Layouts */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 900px) {
+      .content-grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: white;
+      padding: 1.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      max-height: 420px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
+    th {
+      background: #F1F5F9;
+      color: #334155;
+      padding: 0.6rem 0.75rem;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+    tr:hover { background-color: #F8FAFC; }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-success { background: #DCFCE7; color: #166534; }
+    .badge-warning { background: #FEF3C7; color: #92400E; }
+    .badge-danger { background: #FEE2E2; color: #991B1B; }
+    .badge-info { background: #E0F2FE; color: #075985; }
+
+    /* Hidden tabs */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-trophy fa-2x" style="color: var(--gold);"></i>
+      <div>
+        <h1>Bahamas National Sports Platform</h1>
+        <p>Proof of Concept • Ministry of Youth, Sports & Culture</p>
+      </div>
+    </div>
+    <span class="badge-mvp">Live Pitch MVP</span>
+  </header>
+
+  <nav>
+    <button class="nav-btn active" onclick="switchTab('gov')"><i class="fa-solid fa-landmark"></i> 1. Governance & Federations</button>
+    <button class="nav-btn" onclick="switchTab('pipeline')"><i class="fa-solid fa-school"></i> 2. School Pipeline & Scouting</button>
+    <button class="nav-btn" onclick="switchTab('facilities')"><i class="fa-solid fa-plane-departure"></i> 3. Facilities & Tourism</button>
+  </nav>
+
+  <main>
+    <!-- TAB 1: GOVERNANCE -->
+    <div id="tab-gov" class="tab-content active">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-title">Total Federations</span>
+          <span class="kpi-value" id="kpi-fed-count">24</span>
+          <span class="kpi-sub"><i class="fa-solid fa-circle-check"></i> 100% Tracked</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Active Federations</span>
+          <span class="kpi-value" style="color: var(--teal);" id="kpi-active-count">19</span>
+          <span class="kpi-sub">79% In Good Standing</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Avg Governance Compliance</span>
+          <span class="kpi-value" id="kpi-avg-comp">78.5%</span>
+          <span class="kpi-sub"><i class="fa-solid fa-shield"></i> Safeguarding & Anti-Doping</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Monthly Athlete Subvention</span>
+          <span class="kpi-value" style="color: var(--gold);">$152,000</span>
+          <span class="kpi-sub">Direct High-Performance Aid</span>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <div class="card">
+          <div class="card-title">Governance Status Distribution</div>
+          <div style="height: 280px; position: relative;">
+            <canvas id="govPieChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">National Island Presence by Sport</div>
+          <div style="height: 280px; position: relative;">
+            <canvas id="islandBarChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Federation Governance & Compliance Registry</div>
+        <div class="table-container">
+          <table id="fedTable">
+            <thead>
+              <tr>
+                <th>Federation Name</th>
+                <th>Assigned Officer</th>
+                <th>Status</th>
+                <th>Islands Active</th>
+                <th>Safeguarding</th>
+                <th>Anti-Doping</th>
+                <th>Compliance %</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: SCHOOL PIPELINE -->
+    <div id="tab-pipeline" class="tab-content">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Filter Island:</label>
+          <select id="filterIsland" onchange="applySchoolFilters()">
+            <option value="All">All Islands</option>
+            <option value="New Providence">New Providence</option>
+            <option value="Grand Bahama">Grand Bahama</option>
+            <option value="Abaco">Abaco</option>
+            <option value="Eleuthera">Eleuthera</option>
+            <option value="Exuma">Exuma</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Filter Sport:</label>
+          <select id="filterSport" onchange="applySchoolFilters()">
+            <option value="All">All Sports</option>
+            <option value="Track & Field">Track & Field (BAAA)</option>
+            <option value="Basketball">Basketball (BBF)</option>
+            <option value="Aquatics">Aquatics</option>
+            <option value="Baseball">Baseball</option>
+            <option value="Sailing">Sailing</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Track:</label>
+          <select id="filterTrack" onchange="applySchoolFilters()">
+            <option value="All">All Tracks</option>
+            <option value="CARIFTA / National Prospect">CARIFTA / National Prospect</option>
+            <option value="National Talent Pool">National Talent Pool</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-title">Logged Student Athletes</span>
+          <span class="kpi-value" id="kpi-ath-count">222</span>
+          <span class="kpi-sub">Across 28 Bahamian Schools</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">CARIFTA / Elite Prospects</span>
+          <span class="kpi-value" style="color: var(--teal);" id="kpi-carifta-count">34</span>
+          <span class="kpi-sub">U13 to U18 Talent Pipeline</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Top Contributing School</span>
+          <span class="kpi-value" style="font-size: 1.3rem;">SAC / Tabernacle</span>
+          <span class="kpi-sub">BAISS & GB Secondary</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Family Island Inclusion</span>
+          <span class="kpi-value" style="color: var(--gold);">36%</span>
+          <span class="kpi-sub">Athletes outside New Prov.</span>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <div class="card">
+          <div class="card-title">Athletes by School (Top Roster Sources)</div>
+          <div style="height: 280px; position: relative;">
+            <canvas id="schoolChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Pipeline Segmentation by Age Division</div>
+          <div style="height: 280px; position: relative;">
+            <canvas id="ageDivChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Live Student-Athlete Scouting Directory</div>
+        <div class="table-container">
+          <table id="athleteTable">
+            <thead>
+              <tr>
+                <th>Student Athlete</th>
+                <th>Age</th>
+                <th>Division</th>
+                <th>Gender</th>
+                <th>School</th>
+                <th>Island</th>
+                <th>Sport</th>
+                <th>Discipline / Position</th>
+                <th>Pipeline Track</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: FACILITIES & TOURISM -->
+    <div id="tab-facilities" class="tab-content">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-title">Audited Facilities</span>
+          <span class="kpi-value">17</span>
+          <span class="kpi-sub">Public, School, Community</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Fully Operational</span>
+          <span class="kpi-value" style="color: #10B981;">11</span>
+          <span class="kpi-sub">Ready for Immediate Play</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Projected Tourism Visitors</span>
+          <span class="kpi-value" style="color: var(--teal);">12,220+</span>
+          <span class="kpi-sub">Sports in Paradise Fixtures</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">Priority Maintenance Needs</span>
+          <span class="kpi-value" style="color: var(--warning);">6</span>
+          <span class="kpi-sub">Lighting & Court Resurfacing</span>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <div class="card">
+          <div class="card-title">Sports in Paradise: Projected Visitor Turnout</div>
+          <div style="height: 280px; position: relative;">
+            <canvas id="sipChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Facility Readiness Score by Island</div>
+          <div style="height: 280px; position: relative;">
+            <canvas id="facilityChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Sports in Paradise Calendar & Partnerships</div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Event / Initiative</th>
+                <th>Sport</th>
+                <th>Partner Organization</th>
+                <th>Host Island</th>
+                <th>Est. Visitors</th>
+                <th>Economic Tier</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Battle 4 Atlantis NCAA Showcase</td><td>Basketball</td><td>NCAA / Atlantis</td><td>New Providence</td><td>3,200</td><td><span class="badge badge-info">Tier 1 - High</span></td><td><span class="badge badge-success">Confirmed</span></td></tr>
+              <tr><td>Bahamas Bowl Collegiate Football</td><td>Football</td><td>ESPN Events</td><td>New Providence</td><td>4,500</td><td><span class="badge badge-info">Tier 1 - High</span></td><td><span class="badge badge-success">Confirmed</span></td></tr>
+              <tr><td>Exuma Regatta & Sailing Exchange</td><td>Sailing</td><td>Family Island Regatta</td><td>Exuma</td><td>1,800</td><td><span class="badge badge-warning">Tier 2 - Medium</span></td><td><span class="badge badge-success">Confirmed</span></td></tr>
+              <tr><td>PGA Korn Ferry Tour Classic</td><td>Golf</td><td>PGA Tour</td><td>Abaco</td><td>1,100</td><td><span class="badge badge-info">Tier 1 - High</span></td><td><span class="badge badge-success">Completed</span></td></tr>
+              <tr><td>Grand Bahama Youth Invitational</td><td>Athletics</td><td>CARIFTA / US Prep</td><td>Grand Bahama</td><td>650</td><td><span class="badge badge-warning">Tier 3 - Regional</span></td><td><span class="badge badge-success">Confirmed</span></td></tr>
+              <tr><td>Pan-Am Aquatics Winter Training</td><td>Aquatics</td><td>PanAm Aquatics</td><td>New Providence</td><td>450</td><td><span class="badge badge-warning">Tier 2 - Medium</span></td><td><span class="badge badge-warning">Pipeline</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Tab switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Federations Data
+    const federations = [
+      { name: "Bahamas Association of Athletic Associations", officer: "K. Strachan", status: "Active", islands: 7, safe: "Compliant", anti: "Compliant", comp: 100 },
+      { name: "Bahamas Basketball Federation", officer: "M. Rolle", status: "Active", islands: 6, safe: "Compliant", anti: "Compliant", comp: 100 },
+      { name: "Bahamas Aquatics Federation", officer: "D. Ferguson", status: "Active", islands: 4, safe: "Compliant", anti: "Compliant", comp: 100 },
+      { name: "Bahamas Baseball Federation", officer: "L. Saunders", status: "Active", islands: 5, safe: "Compliant", anti: "Compliant", comp: 90 },
+      { name: "Sailing (Federation of The Bahamas)", officer: "T. Cartwright", status: "Active", islands: 8, safe: "Compliant", anti: "Compliant", comp: 100 },
+      { name: "Bahamas Lawn Tennis Association", officer: "A. Minnis", status: "Active", islands: 3, safe: "Compliant", anti: "Compliant", comp: 90 },
+      { name: "Bahamas Football Association", officer: "S. Johnson", status: "Active", islands: 5, safe: "Compliant", anti: "Compliant", comp: 95 },
+      { name: "Bahamas Volleyball Federation", officer: "K. Strachan", status: "Active", islands: 4, safe: "Compliant", anti: "Pending Review", comp: 70 },
+      { name: "Bahamas Boxing Federation", officer: "M. Rolle", status: "Under Review", islands: 2, safe: "Pending Review", anti: "Compliant", comp: 55 },
+      { name: "Bahamas Cycling Federation", officer: "D. Ferguson", status: "Active", islands: 3, safe: "Compliant", anti: "Compliant", comp: 85 },
+      { name: "Bahamas Golf Federation", officer: "L. Saunders", status: "Active", islands: 4, safe: "Compliant", anti: "Compliant", comp: 90 },
+      { name: "Bahamas Judo Federation", officer: "A. Minnis", status: "Under Review", islands: 2, safe: "Compliant", anti: "Non-Compliant", comp: 50 },
+      { name: "Bahamas Archery Federation", officer: "T. Cartwright", status: "Inactive", islands: 1, safe: "Pending Review", anti: "Non-Compliant", comp: 30 }
+    ];
+
+    // Populate Gov Table
+    const fedTbody = document.querySelector("#fedTable tbody");
+    federations.forEach(f => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${f.name}</strong></td>
+        <td>${f.officer}</td>
+        <td><span class="badge ${f.status === 'Active' ? 'badge-success' : (f.status === 'Under Review' ? 'badge-warning' : 'badge-danger')}">${f.status}</span></td>
+        <td>${f.islands} Islands</td>
+        <td><span class="badge ${f.safe === 'Compliant' ? 'badge-success' : 'badge-warning'}">${f.safe}</span></td>
+        <td><span class="badge ${f.anti === 'Compliant' ? 'badge-success' : 'badge-danger'}">${f.anti}</span></td>
+        <td><strong>${f.comp}%</strong></td>
+      `;
+      fedTbody.appendChild(tr);
+    });
+
+    // Athletes Sample Data
+    const rawAthletes = [
+      { name: "Malik Rolle", age: 16, div: "U18 (Senior)", gender: "Male", school: "St. Augustine's College (SAC)", island: "New Providence", sport: "Track & Field", pos: "100m / 200m Sprint", track: "CARIFTA / National Prospect" },
+      { name: "Shaunae Ferguson", age: 15, div: "U15 (Intermediate)", gender: "Female", school: "Queen's College (QC)", island: "New Providence", sport: "Track & Field", pos: "400m Sprint", track: "CARIFTA / National Prospect" },
+      { name: "Kobe Cartwright", age: 17, div: "U18 (Senior)", gender: "Male", school: "Tabernacle Baptist", island: "Grand Bahama", sport: "Basketball", pos: "Point Guard", track: "CARIFTA / National Prospect" },
+      { name: "Tariq Bain", age: 14, div: "U15 (Intermediate)", gender: "Male", school: "C.V. Bethel Senior High", island: "New Providence", sport: "Basketball", pos: "Shooting Guard", track: "National Talent Pool" },
+      { name: "Alia Minnis", age: 13, div: "U13 (Junior)", gender: "Female", school: "St. Andrew's International", island: "New Providence", sport: "Aquatics", pos: "100m Butterfly", track: "CARIFTA / National Prospect" },
+      { name: "D'Angelo Seymour", age: 16, div: "U18 (Senior)", gender: "Male", school: "Sunland Baptist", island: "Grand Bahama", sport: "Baseball", pos: "Shortstop", track: "National Talent Pool" },
+      { name: "Brianna Pinder", age: 15, div: "U15 (Intermediate)", gender: "Female", school: "L.N. Coakley High", island: "Exuma", sport: "Sailing", pos: "Optimist Dinghy", track: "CARIFTA / National Prospect" },
+      { name: "Devynne Smith", age: 14, div: "U15 (Intermediate)", gender: "Female", school: "Central Eleuthera High", island: "Eleuthera", sport: "Track & Field", pos: "High Jump", track: "National Talent Pool" },
+      { name: "Kendrick Moss", age: 17, div: "U18 (Senior)", gender: "Male", school: "Central Abaco High", island: "Abaco", sport: "Basketball", pos: "Small Forward", track: "National Talent Pool" },
+      { name: "Cydney Turnquest", age: 13, div: "U13 (Junior)", gender: "Female", school: "Kingsway Academy", island: "New Providence", sport: "Track & Field", pos: "800m Run", track: "National Talent Pool" },
+      { name: "Jaden Burrows", age: 16, div: "U18 (Senior)", gender: "Male", school: "St. George's High", island: "Grand Bahama", sport: "Track & Field", pos: "Long Jump", track: "CARIFTA / National Prospect" },
+      { name: "Kenroy Wells", age: 15, div: "U15 (Intermediate)", gender: "Male", school: "Government High (GHS)", island: "New Providence", sport: "Baseball", pos: "Pitcher", track: "National Talent Pool" }
+    ];
+
+    function renderAthletes(data) {
+      const tbody = document.querySelector("#athleteTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(a => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${a.name}</strong></td>
+          <td>${a.age}</td>
+          <td>${a.div}</td>
+          <td>${a.gender}</td>
+          <td>${a.school}</td>
+          <td>${a.island}</td>
+          <td>${a.sport}</td>
+          <td>${a.pos}</td>
+          <td><span class="badge ${a.track.includes('CARIFTA') ? 'badge-success' : 'badge-info'}">${a.track}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.getElementById("kpi-ath-count").textContent = data.length * 18;
+      document.getElementById("kpi-carifta-count").textContent = data.filter(d => d.track.includes("CARIFTA")).length * 6;
+    }
+
+    function applySchoolFilters() {
+      const isld = document.getElementById("filterIsland").value;
+      const sprt = document.getElementById("filterSport").value;
+      const trk = document.getElementById("filterTrack").value;
+
+      const filtered = rawAthletes.filter(a => {
+        return (isld === "All" || a.island === isld) &&
+               (sprt === "All" || a.sport === sprt) &&
+               (trk === "All" || a.track === trk);
+      });
+      renderAthletes(filtered);
+    }
+    renderAthletes(rawAthletes);
+
+    // CHARTS INITIALIZATION
+    window.onload = function() {
+      // 1. Governance Pie
+      new Chart(document.getElementById('govPieChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Active', 'Under Review', 'Inactive'],
+          datasets: [{
+            data: [19, 3, 2],
+            backgroundColor: ['#00A3E0', '#FFC72C', '#94A3B8']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // 2. Island Bar Chart
+      new Chart(document.getElementById('islandBarChart'), {
+        type: 'bar',
+        data: {
+          labels: ['Sailing', 'Athletics', 'Basketball', 'Football', 'Aquatics', 'Baseball'],
+          datasets: [{
+            label: 'Islands Active',
+            data: [8, 7, 6, 5, 4, 4],
+            backgroundColor: '#1B365D'
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
+      });
+
+      // 3. School Sources Chart
+      new Chart(document.getElementById('schoolChart'), {
+        type: 'bar',
+        data: {
+          labels: ['SAC', 'Tabernacle', 'QC', 'C.V. Bethel', 'Sunland', 'Central Abaco', 'L.N. Coakley'],
+          datasets: [{
+            label: 'Tracked Athletes',
+            data: [38, 32, 29, 27, 24, 18, 14],
+            backgroundColor: '#00A3E0'
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // 4. Age Division Chart
+      new Chart(document.getElementById('ageDivChart'), {
+        type: 'pie',
+        data: {
+          labels: ['U13 (Junior)', 'U15 (Intermediate)', 'U18 (Senior)'],
+          datasets: [{
+            data: [45, 98, 79],
+            backgroundColor: ['#10B981', '#00A3E0', '#1B365D']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // 5. SIP Tourism Chart
+      new Chart(document.getElementById('sipChart'), {
+        type: 'bar',
+        data: {
+          labels: ['Bahamas Bowl', 'Battle 4 Atlantis', 'Exuma Regatta', 'PGA Classic', 'GB Youth Inv.'],
+          datasets: [{
+            label: 'Estimated Visitors',
+            data: [4500, 3200, 1800, 1100, 650],
+            backgroundColor: '#FFC72C'
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // 6. Facilities Readiness
+      new Chart(document.getElementById('facilityChart'), {
+        type: 'bar',
+        data: {
+          labels: ['New Providence', 'Grand Bahama', 'Exuma', 'Abaco', 'Eleuthera'],
+          datasets: [{
+            label: 'Average Readiness %',
+            data: [88, 76, 70, 62, 58],
+            backgroundColor: '#10B981'
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    };
+  </script>
+</body>
+</html>
